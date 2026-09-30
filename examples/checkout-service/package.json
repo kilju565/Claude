@@ -1,0 +1,9 @@
+{
+  "name": "checkout-service-example",
+  "private": true,
+  "type": "module",
+  "description": "Deliberately buggy service used to demonstrate DevMedic.",
+  "scripts": {
+    "test:integration": "node --test"
+  }
+}

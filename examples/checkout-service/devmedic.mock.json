@@ -1,0 +1,37 @@
+{
+  "description": "Scripted MockLLMClient responses, consumed one per model call. Story: attempt 1 proposes a wrong fix (rolled back); attempt 2 first repeats it with different formatting (rejected by memory, re-prompted), then fixes the pricing bug (1 of 2 tests fixed -> kept as new baseline); attempt 3 fixes the discount bug -> green.",
+  "responses": [
+    {
+      "analysis": "subtotal() in src/pricing.js:3 ignores item.quantity, so multi-quantity carts are under-charged.",
+      "plan": [
+        "Account for quantity when summing line items in subtotal()"
+      ],
+      "confidence": 0.55,
+      "patch": "--- a/src/pricing.js\n+++ b/src/pricing.js\n@@ -1,4 +1,4 @@\n /** Sum of line-item prices for a cart. */\n export function subtotal(items) {\n-  return items.reduce((sum, item) => sum + item.price, 0);\n+  return items.reduce((sum, item) => sum + item.price + item.quantity, 0);\n }\n"
+    },
+    {
+      "analysis": "subtotal() still ignores quantity (src/pricing.js:3).",
+      "plan": [
+        "Add the quantity to each line item total"
+      ],
+      "confidence": 0.5,
+      "patch": "--- a/src/pricing.js\n+++ b/src/pricing.js\n@@ -3 +3 @@\n-  return items.reduce((sum, item) => sum + item.price, 0);\n+  return items.reduce((sum, item) => sum + item.price + item.quantity, 0);\n"
+    },
+    {
+      "analysis": "Adding quantity to price is wrong; a line total is price multiplied by quantity (src/pricing.js:3).",
+      "plan": [
+        "Multiply price by quantity for each line item in subtotal()"
+      ],
+      "confidence": 0.85,
+      "patch": "--- a/src/pricing.js\n+++ b/src/pricing.js\n@@ -1,4 +1,4 @@\n /** Sum of line-item prices for a cart. */\n export function subtotal(items) {\n-  return items.reduce((sum, item) => sum + item.price, 0);\n+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n }\n"
+    },
+    {
+      "analysis": "applyDiscount() in src/discounts.js:9 returns the discount amount instead of the discounted price.",
+      "plan": [
+        "Return amount * (1 - rate) so the rate is subtracted from the amount"
+      ],
+      "confidence": 0.9,
+      "patch": "--- a/src/discounts.js\n+++ b/src/discounts.js\n@@ -5,5 +5,5 @@\n /** Applies a percentage discount code to an amount. Unknown codes leave the amount unchanged. */\n export function applyDiscount(amount, code) {\n   const rate = DISCOUNT_RATES[code] ?? 0;\n-  return amount * rate;\n+  return amount * (1 - rate);\n }\n"
+    }
+  ]
+}
