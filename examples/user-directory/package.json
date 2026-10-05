@@ -1,0 +1,9 @@
+{
+  "name": "user-directory-example",
+  "private": true,
+  "type": "module",
+  "description": "Deliberately buggy TypeScript service used to demonstrate DevMedic (runs on Node's built-in type stripping).",
+  "scripts": {
+    "test:integration": "node --test"
+  }
+}

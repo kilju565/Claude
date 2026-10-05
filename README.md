@@ -36,14 +36,18 @@ $ devmedic -c "npm run test:integration"
 
 ```bash
 npm install
-npm run demo        # builds, copies examples/checkout-service to a temp dir, and heals it
-npm test            # unit + integration tests
+npm run demo                     # builds, copies examples/checkout-service to a temp dir, and heals it
+npm run demo -- user-directory   # the same for the TypeScript example
+npm test                         # unit + integration tests
 ```
 
-`npm run demo` runs the example project through the full story. Attempt 1 is a wrong fix and is
-rolled back. In attempt 2 the model first repeats that fix with different formatting, which
-memory rejects, and then fixes one of the two bugs, which is kept. Attempt 3 fixes the second bug
-using a hunk header that is off by one line, and the suite goes green.
+Each example is a small project with a real failing `node --test` suite and a scripted mock
+fixture. The demo runs on a temporary copy, so the examples in the repository stay broken.
+
+| Example | Failure | What the run shows |
+| --- | --- | --- |
+| [`checkout-service`](examples/checkout-service) (JavaScript) | Two assertion failures from two bugs | Attempt 1 is a wrong fix and is rolled back. In attempt 2 the model first repeats that fix with different formatting, which memory rejects, and then fixes one bug, which is kept. Attempt 3 fixes the second bug using a hunk header that is off by one line, and the suite goes green. |
+| [`user-directory`](examples/user-directory) (TypeScript) | A `TypeError` thrown inside the source code | The stack trace points straight at `src/users.ts:14`. Attempt 1's patch quotes code that isn't in the file, so the patcher refuses it and reports the exact mismatch. Attempt 2 adds the missing guard, and the suite goes green. |
 
 ## Architecture
 
@@ -205,6 +209,6 @@ npm run typecheck   # strict type-check of src/ and test/
 npm test            # vitest: analyzer/patcher/context/llm/memory unit tests + agent & CLI integration tests
 ```
 
-This requires Node.js 22.12 or later. The integration tests run the real `node --test` suite of
-[`examples/checkout-service`](examples/checkout-service) in temporary directories; only the model
-is scripted.
+This requires Node.js 22.12 or later (the TypeScript example also relies on Node's built-in type
+stripping, which is on by default from 22.18). The integration tests run the real `node --test`
+suites of both examples in temporary directories; only the model is scripted.

@@ -1,0 +1,22 @@
+{
+  "description": "Scripted MockLLMClient responses, one per model call. Attempt 1 proposes a patch whose context lines do not match the real file (a hallucination); the patcher refuses it and the mismatch is fed back. Attempt 2 adds the missing-profile guard the docstring promises -> green.",
+  "responses": [
+    {
+      "analysis": "displayName() in src/users.ts:14 dereferences user.profile, which is optional.",
+      "plan": [
+        "Fall back to the username when the profile is missing"
+      ],
+      "confidence": 0.6,
+      "patch": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -13,3 +13,3 @@\n export function displayName(user: User): string {\n-  return user.profile.firstName + ' ' + user.profile.lastName;\n+  return user.profile ? user.profile.firstName + ' ' + user.profile.lastName : user.username;\n }\n"
+    },
+    {
+      "analysis": "displayName() (src/users.ts:14) uses non-null assertions on the optional `profile`, so users without a profile throw a TypeError instead of falling back to their username as the docstring promises.",
+      "plan": [
+        "Return user.username when user.profile is undefined",
+        "Drop the now-unneeded non-null assertions"
+      ],
+      "confidence": 0.92,
+      "patch": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -12,4 +12,7 @@\n /** Name shown in the staff directory: \"First Last\", or the username when there is no profile. */\n export function displayName(user: User): string {\n-  return `${user.profile!.firstName} ${user.profile!.lastName}`;\n+  if (!user.profile) {\n+    return user.username;\n+  }\n+  return `${user.profile.firstName} ${user.profile.lastName}`;\n }\n"
+    }
+  ]
+}

@@ -25,10 +25,10 @@ export async function makeProject(files: Record<string, string> = {}): Promise<s
   return dir;
 }
 
-/** Copies the example project into a temp dir so tests can mutate it. */
-export async function copyExample(): Promise<string> {
+/** Copies an example project (default: checkout-service) into a temp dir so tests can mutate it. */
+export async function copyExample(name = 'checkout-service'): Promise<string> {
   const dir = await makeProject();
-  await cp(EXAMPLE_PROJECT, dir, { recursive: true });
+  await cp(path.join(REPO_ROOT, 'examples', name), dir, { recursive: true });
   return dir;
 }
 

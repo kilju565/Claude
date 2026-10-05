@@ -158,6 +158,20 @@ describe('runAgent', () => {
     expect(result.status).toBe('unfixable');
   });
 
+  it('heals the TypeScript example: refuses a hallucinated hunk, then applies the real fix', async () => {
+    const example = path.join(EXAMPLE_PROJECT, '..', 'user-directory');
+    const root = await copyExample('user-directory');
+    const llm = await MockLLMClient.fromFixture(path.join(example, 'devmedic.mock.json'));
+    const result = await runAgent(config(root), { llm, logger: silentLogger });
+
+    expect(result.status).toBe('fixed');
+    expect(result.history.map((r) => r.outcome)).toEqual(['apply-failed', 'tests-passed']);
+    expect(result.history[0]?.error).toContain('at line 14 the patch expects');
+    // The stack trace (TypeError thrown inside the source) pinpoints the bug, not just the test.
+    expect(await read(root, 'src/users.ts')).toContain('return user.username;');
+    expect(await read(root, 'src/directory.ts')).toBe(await read(example, 'src/directory.ts'));
+  });
+
   it('rolls back the in-flight patch when interrupted during verification', async () => {
     const root = await copyExample();
     const before = await snapshotTree(root);
